@@ -1424,7 +1424,7 @@ function handlePost() {
                                 $post['image_width'], $post['image_height'], $post['parent'] != '0'
                         );
                         $thumb_info = getimagesize($thumb_location);
-                        $post['thumb_width'] = $thumb_info[0]; $post['thumb_height'] = $thumb_info[1];
+                        $post['thumb_width'] = TINYIB_THUMBWIDTH; $post['thumb_height'] = TINYIB_THUMBHEIGHT;
                 }
         }
 if (!CLAIRE_TEXTMODE) {
