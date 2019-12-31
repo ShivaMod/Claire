@@ -19,11 +19,11 @@ define('TINYIB_THUMBHEIGHT', 300);
 define('TINYIB_REPLYWIDTH',  200);
 define('TINYIB_REPLYHEIGHT', 300);
 define('TINYIB_TIMEZONE',   ''); // Leave blank to use server default timezone
-define('TINYIB_DATEFORMAT', 'D Y-m-d g:ia');
+define('TINYIB_DATEFORMAT', 'd-m-Y G:i');
 define('TINYIB_DBPOSTS','posts');
 define('TINYIB_DBBANS', 'bans');
 define('TINYIB_DBLOCKS','locked_threads');
-define('TINYIB_DBPATH', '../database.db');
+define('TINYIB_DBPATH', 'database.db');
 // --Config End--
 session_start();if (!file_exists('db')){mkdir('db', 0777, true);}
 error_reporting(E_ALL);
