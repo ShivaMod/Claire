@@ -394,7 +394,7 @@ $body = '
                                         </tr>
         ';
         $post_button_name = ($parent) ? 'Post Reply' : 'Create Thread';
-        $opt_bump_thread = ($parent) ? '<label><input type="checkbox" name="bump" id="bump" checked>Bump</label>' : '';
+        $opt_bump_thread = ($parent) ? '<label><input type="checkbox" name="bump" id="bump">Sage</label>' : '';
         $opt_modpost = LOGGED_IN ? '<label><input type="checkbox" name="modpost" id="modpost">Modpost</label>' : '';
         $opt_rawhtml = LOGGED_IN ? '<label><input type="checkbox" name="rawhtml" id="rawhtml">RawHTML</label>' : '';
         $body .= '
@@ -1441,5 +1441,5 @@ if (!CLAIRE_TEXTMODE) {
         $post['id'] = insertPost($post);
         $redirect = '?do=thread&id=' . ($post['parent']=='0' ? $post['id'] : $post['parent']) . '#'. $post['id'];
         trimThreads();
-        if ($post['parent'] != '0' && $bump) bumpThreadByID($post['parent']);
+        if ($post['parent'] != '0' && !$bump) bumpThreadByID($post['parent']);
 }
