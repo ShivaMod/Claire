@@ -1,5 +1,6 @@
 <?php
 // --Config Start-- 
+define('SV_ANONYMOUS', true); //true allow names.
 define('CLAIRE_TEXTMODE', false); //true disallow images.
 define('CLAIRE_BLOGMODE', false); //true allow creating thread only by admin & mod.
 define('TINYIB_PAGETITLE', 'Claire Imageboard');
@@ -347,10 +348,17 @@ $body = '
                         <form name="postform" id="postform" action="?do=post" method="post" enctype="multipart/form-data">
                         <input type="hidden" name="parent" value="'.htmlspecialchars($parent).'">
                         <table class="postform">
-                                <tbody><tr><td class="postblock" title="Optional [#password]">Name</td>
-                                <td><input type="text" name="name" size="28" maxlength="75">
-                                </td></tr>
+                                <tbody>
         ';
+	if (SV_ANONYMOUS) {
+		$body .= '
+                             		<tr>
+						<td class="postblock" title="Optional [#password]">Name</td>
+                                		<td>
+							<input type="text" name="name" size="28" maxlength="75">
+                               			</td>
+					</tr>
+        ';}
         if (! $parent) {
                 $body .= '
                                         <tr>
