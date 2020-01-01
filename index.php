@@ -1430,10 +1430,14 @@ function handlePost() {
 if (!CLAIRE_TEXTMODE) {
         if ($post['file'] == '') { // No file uploaded
                 if ($post['parent'] == '0') {
-                        fancyDie("An image is required to start a thread.");}}}
-                if (str_replace('<br>', '', $post['message']) == "") {
-                        fancyDie("Please enter a message.");
-                }
+                        fancyDie("An image is required to start a thread.");
+		} else {
+				if (str_replace('<br>', '', $post['message']) == "") {
+                        fancyDie("Please enter a message.");}}
+		} else {
+                        if ($post['parent'] == '0') {
+			        if (str_replace('<br>', '', $post['message']) == "") {
+				        fancyDie("Please enter a message.");}}}}
         $post['id'] = insertPost($post);
         $redirect = '?do=thread&id=' . ($post['parent']=='0' ? $post['id'] : $post['parent']) . '#'. $post['id'];
         trimThreads();
