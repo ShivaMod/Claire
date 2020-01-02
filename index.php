@@ -664,6 +664,7 @@ function manageAllThreads() {
                                         <th style="width:160px;">Created</th>
                                         <th style="width:160px;">Last Bump</th>
                                         <th>Locked</th>
+                                        <th>Moderate</th>
                                 </tr>
                         </thead>
                         <tbody>
@@ -680,6 +681,7 @@ function manageAllThreads() {
                                         <td>'.date(TINYIB_DATEFORMAT, $thread['timestamp']).'</td>
                                         <td><a href="?do=manage&p=bump&id='.$thread['id'].'" title="Bump this thread">'.$bump.'</a></td>
                                         <td>'.($locked ? 'Locked' : '-').'</td>
+					<td><a href="?manage=&do=manage&p=moderate&moderate='.$thread['id'].'">X</a></td>
                                 </tr>
                 ';
         }
