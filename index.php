@@ -142,7 +142,7 @@ EOF;
         $return .= <<<EOF
 <a href="?do=delpost&id={$post['id']}" title="Delete" />X</a> <a name="${post['id']}"></a>
 EOF;
-	if (SV_GOOGLE) {
+	if (SV_GOOGLE && $post["file"] != "") {
         $return .= <<<EOF
  <a name="${post['id']}"></a> <a href="//www.google.com/searchbyimage?image_url=$svdomain/db/${post["thumb"]}" title="Google" />g</a> 
 EOF;
