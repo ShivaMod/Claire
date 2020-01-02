@@ -35,6 +35,8 @@ function pageHeader() {
 <html>
         <head>
 <style>
+.expand{display:none}
+.expand:checked + img {max-width: 600px !important;max-height: 900px !important;}
 #postarea table{margin:0 auto;text-align:left}
 #postarea,.login{text-align:center}
 .abbrev{color:#707070}
@@ -130,7 +132,7 @@ EOF;
         } elseif ($post["file"] != "") {
                 $return .= <<<EOF
 <a target="_blank" href="db/${post["file"]}">
-        <span id="thumb${post['id']}"><img title="$image_desc" src="db/${post["thumb"]}" alt="${post["id"]}" class="thumb" style="max-width:${post["thumb_width"]}px;max-height:${post["thumb_height"]}px"></span>
+        <span id="thumb${post['id']}"><label><input type="checkbox" class="expand"><img title="$image_desc" src="db/${post["thumb"]}" alt="${post["id"]}" class="thumb" style="max-width:${post["thumb_width"]}px;max-height:${post["thumb_height"]}px"></label></span>
 </a>
 EOF;
         }
@@ -156,7 +158,7 @@ EOF;
                 $return .= <<<EOF
 <br>
 <a target="_blank" href="db/${post["file"]}">
-        <span id="thumb${post["id"]}"><img title="$image_desc" src="db/${post["thumb"]}" alt="${post["id"]}" class="thumb" style="max-width:${post["thumb_width"]}px;max-height:${post["thumb_height"]}px"></span>
+        <span id="thumb${post["id"]}"><label><input type="checkbox" class="expand"><img title="$image_desc" src="db/${post["thumb"]}" alt="${post["id"]}" class="thumb" style="max-width:${post["thumb_width"]}px;max-height:${post["thumb_height"]}px"></label></span>
 </a>
 EOF;
         }
