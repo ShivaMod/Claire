@@ -360,7 +360,7 @@ $body = '
                         <table class="postform">
                                 <tbody>
         ';
-	if (SV_ANONYMOUS) {
+	if (SV_ANONYMOUS or LOGGED_IN) {
 		$body .= '
                              		<tr>
 						<td class="postblock" title="Optional [#password]">Name</td>
