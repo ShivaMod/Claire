@@ -1,6 +1,8 @@
 <?php
 // --Config Start-- 
 define('SV_ANONYMOUS', true); //true allow names.
+define('SV_GOOGLE', false); //true allow Google search.
+define('SV_DOMAIN', 'http://localhost/claire'); // Domain and directory of this board
 define('CLAIRE_TEXTMODE', false); //true disallow images.
 define('CLAIRE_BLOGMODE', false); //true allow creating thread only by admin & mod.
 define('TINYIB_PAGETITLE', 'Claire Imageboard');
@@ -105,6 +107,7 @@ $post = preg_replace("#\*\*(.*?)\*\*#","<b>\\1</b>",$post);
     $post = preg_replace("#\%\%(.*?)\%\%#","<span class=\"spoiler\">\\1</span>",$post);
     $post = preg_replace("#\'\'(.*?)\'\'#","<pre style=\"font-family: Courier New, Courier, mono\">\\1</pre>",$post);
         $return = "";
+	$svdomain = SV_DOMAIN;
         $threadid = ($post['parent'] == 0) ? $post['id'] : $post['parent'];
         $postlink = '?do=thread&id='.$threadid.'#'.$post['id'];
         $image_desc = '';
@@ -139,6 +142,11 @@ EOF;
         $return .= <<<EOF
 <a href="?do=delpost&id={$post['id']}" title="Delete" />X</a> <a name="${post['id']}"></a>
 EOF;
+	if (SV_GOOGLE) {
+        $return .= <<<EOF
+ <a name="${post['id']}"></a> <a href="//www.google.com/searchbyimage?image_url=$svdomain/db/${post["thumb"]}" title="Google" />g</a> 
+EOF;
+	}
         if ($post["subject"] != "") {
                 $return .= "    <span class=\"filetitle\">${post["subject"]}</span> ";
         }
