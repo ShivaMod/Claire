@@ -1,8 +1,8 @@
 <?php
 // --Config Start-- 
-define('SV_ANONYMOUS', true); //true allow names.
-define('SV_GOOGLE', false); //true allow Google search.
-define('SV_DOMAIN', 'http://localhost/claire'); // Domain and directory of this board
+define('SV_ANONYMOUS', true); //true allow posting names.
+define('SV_GOOGLE', false); //true enable Google reverse search button.
+define('SV_DOMAIN', 'http://localhost/claire'); // Domain and directory where your board is
 define('CLAIRE_TEXTMODE', false); //true disallow images.
 define('CLAIRE_BLOGMODE', false); //true allow creating thread only by admin & mod.
 define('TINYIB_PAGETITLE', 'Claire Imageboard');
@@ -15,7 +15,7 @@ define('TINYIB_DELETE_TIMEOUT', 1200);  // Seconds for deleting own posts
 define('TINYIB_MAXPOSTSIZE',    16000); // Characters
 define('TINYIB_RATELIMIT',      7);   // Delay between posts from same IP
 define('TINYIB_TRIPSEED',   "1231");
-define('TINYIB_USECAPTCHA',   true); // just use it.
+define('TINYIB_USECAPTCHA',   false); // just use it.
 define('TINYIB_CAPTCHASALT',  'CAPTCHASALT');
 define('TINYIB_THUMBWIDTH',  200);
 define('TINYIB_THUMBHEIGHT', 300);
@@ -53,10 +53,11 @@ function pageHeader() {
 .managebutton{font-size:15px;height:28px;margin:.2em}
 .moderator{color:red}
 .nothumb{background:#eee;border:2px dashed #aaa;float:left;margin:2px 20px;padding:1em .5em;text-align:center}
-.omittedposts{color:#707070;font-style:italic}
+.omittedposts{color:#707070;font-style:italic;float:right}
 .postblock{color:#fff;font-size:12px;font-weight:100;text-align:right}
 .postername,.commentpostername{color:#117743}
 .postertrip{color:#228854}
+.reply:target{background:#393939;}
 .reply{background:rgba(20,20,20,0.5);border:1px dashed #666;border-radius:2px;max-width:700px;padding:4px;word-wrap:break-word}
 .reply .filesize{margin-left:20px}
 .replyhl{background:#F0C0B0;color:maroon}
@@ -111,7 +112,7 @@ $post = preg_replace("#\*\*(.*?)\*\*#","<b>\\1</b>",$post);
 		$reply_width = TINYIB_REPLYWIDTH; $reply_height = TINYIB_REPLYHEIGHT;
 		$svdomain = SV_DOMAIN;
         $threadid = ($post['parent'] == 0) ? $post['id'] : $post['parent'];
-        $postlink = '?do=thread&id='.$threadid.'#'.$post['id'];
+        $postlink = '?do=thread&id='.$threadid.'#reply'.$post['id'];
         $image_desc = '';
         if ($post['file'] != '') {
                 $image_desc =
@@ -143,16 +144,16 @@ EOF;
         }
 	if (LOGGED_IN) {
         $return .= <<<EOF
-<a href="?manage=&do=manage&p=moderate&moderate={$post['id']}" title="Delete" />X</a> <a name="${post['id']}"></a>
+<a href="?manage=&do=manage&p=moderate&moderate={$post['id']}" title="Delete" />X</a>
 EOF;
 	} else {
 	$return .= <<<EOF
-<a href="?do=delpost&id={$post['id']}" title="Delete" />X</a> <a name="${post['id']}"></a>
+<a href="?do=delpost&id={$post['id']}" title="Delete" />X</a>
 EOF;
 	}
 	if (SV_GOOGLE && $post["file"] != "") {
         $return .= <<<EOF
- <a name="${post['id']}"></a> <a href="//www.google.com/searchbyimage?image_url=$svdomain/db/${post["file"]}" title="Google" />g</a> 
+<a href="//www.google.com/searchbyimage?image_url=$svdomain/db/${post["file"]}" title="Google" />g</a> 
 EOF;
 	}
         if ($post["subject"] != "") {
