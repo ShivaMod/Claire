@@ -19,10 +19,10 @@ define('TINYIB_USECAPTCHA',   true); // just use it.
 define('TINYIB_CAPTCHASALT',  'CAPTCHASALT');
 define('TINYIB_THUMBWIDTH',  200);
 define('TINYIB_THUMBHEIGHT', 300);
-define('TINYIB_REPLYWIDTH',  200);
-define('TINYIB_REPLYHEIGHT', 300);
+define('TINYIB_REPLYWIDTH',  100);
+define('TINYIB_REPLYHEIGHT', 150);
 define('TINYIB_TIMEZONE',   ''); // Leave blank to use server default timezone
-define('TINYIB_DATEFORMAT', 'd-m-Y G:i');
+define('TINYIB_DATEFORMAT', 'd/m/Y G:i');
 define('TINYIB_DBPOSTS','posts');
 define('TINYIB_DBBANS', 'bans');
 define('TINYIB_DBLOCKS','locked_threads');
@@ -107,7 +107,9 @@ $post = preg_replace("#\*\*(.*?)\*\*#","<b>\\1</b>",$post);
     $post = preg_replace("#\%\%(.*?)\%\%#","<span class=\"spoiler\">\\1</span>",$post);
     $post = preg_replace("#\'\'(.*?)\'\'#","<pre style=\"font-family: Courier New, Courier, mono\">\\1</pre>",$post);
         $return = "";
-	$svdomain = SV_DOMAIN;
+		$thumb_width = TINYIB_THUMBWIDTH; $thumb_height = TINYIB_THUMBHEIGHT;
+		$reply_width = TINYIB_REPLYWIDTH; $reply_height = TINYIB_REPLYHEIGHT;
+		$svdomain = SV_DOMAIN;
         $threadid = ($post['parent'] == 0) ? $post['id'] : $post['parent'];
         $postlink = '?do=thread&id='.$threadid.'#'.$post['id'];
         $image_desc = '';
@@ -135,7 +137,7 @@ EOF;
         } elseif ($post["file"] != "") {
                 $return .= <<<EOF
 <a target="_blank" href="db/${post["file"]}">
-        <span id="thumb${post['id']}"><label><input type="checkbox" class="expand"><img title="$image_desc" src="db/${post["thumb"]}" alt="${post["id"]}" class="thumb" style="max-width:${post["thumb_width"]}px;max-height:${post["thumb_height"]}px"></label></span>
+        <span id="thumb${post['id']}"><label><input type="checkbox" class="expand"><img title="$image_desc" src="db/${post["file"]}" alt="${post["id"]}" class="thumb" style="max-width:$thumb_width\px;max-height:$thumb_height\px"></label></span>
 </a>
 EOF;
         }
@@ -150,7 +152,7 @@ EOF;
 	}
 	if (SV_GOOGLE && $post["file"] != "") {
         $return .= <<<EOF
- <a name="${post['id']}"></a> <a href="//www.google.com/searchbyimage?image_url=$svdomain/db/${post["thumb"]}" title="Google" />g</a> 
+ <a name="${post['id']}"></a> <a href="//www.google.com/searchbyimage?image_url=$svdomain/db/${post["file"]}" title="Google" />g</a> 
 EOF;
 	}
         if ($post["subject"] != "") {
@@ -172,7 +174,7 @@ EOF;
                 $return .= <<<EOF
 <br>
 <a target="_blank" href="db/${post["file"]}">
-        <span id="thumb${post["id"]}"><label><input type="checkbox" class="expand"><img title="$image_desc" src="db/${post["thumb"]}" alt="${post["id"]}" class="thumb" style="max-width:${post["thumb_width"]}px;max-height:${post["thumb_height"]}px"></label></span>
+        <span id="thumb${post["id"]}"><label><input type="checkbox" class="expand"><img title="$image_desc" src="db/${post["file"]}" alt="${post["id"]}" class="thumb" style="max-width:$reply_width\px;max-height:$reply_height\px"></label></span>
 </a>
 EOF;
         }
@@ -735,10 +737,7 @@ function newPost() {
                 'file_size' => '0',
                 'file_size_formatted' => '',
                 'image_width' => '0',
-                'image_height' => '0',
-                'thumb' => '',
-                'thumb_width' => '0',
-                'thumb_height' => '0'
+                'image_height' => '0'
         );
 }
 function convertBytes($number) {
@@ -933,16 +932,6 @@ function checkDuplicateImage($hex) {
                 }
         }
 }
-function thumbnailDimensions($width, $height, $is_reply) {
-        if ($is_reply) {
-                $max_h = TINYIB_REPLYHEIGHT;
-                $max_w = TINYIB_REPLYWIDTH;
-        } else {
-                $max_h = TINYIB_THUMBHEIGHT;
-                $max_w = TINYIB_THUMBWIDTH;
-        }
-        return ($width > $max_w || $height > $max_h) ? array($max_w, $max_h) : array($width, $height);
-}
 function redirect($url='?do=page&p=0') {
         header('Location: '.$url);
         die();
@@ -975,10 +964,7 @@ function validateDatabaseSchema() {
                 file_size INTEGER NOT NULL DEFAULT "0",
                 file_size_formatted TEXT NOT NULL,
                 image_width INTEGER NOT NULL DEFAULT "0",
-                image_height INTEGER NOT NULL DEFAULT "0",
-                thumb TEXT NOT NULL,
-                thumb_width INTEGER NOT NULL DEFAULT "0",
-                thumb_height INTEGER NOT NULL DEFAULT "0"
+                image_height INTEGER NOT NULL DEFAULT "0"
         )
         ');
         $db->query('
@@ -1023,10 +1009,9 @@ function insertPost($post) {
                 INSERT INTO '.TINYIB_DBPOSTS.' (
                         parent, timestamp, bumped, ip, name, tripcode, email, nameblock,
                         subject, message, password, file, file_hex, file_original,
-                        file_size, file_size_formatted, image_width, image_height,
-                        thumb, thumb_width, thumb_height
+                        file_size, file_size_formatted, image_width, image_height
                 ) VALUES (
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )',
                 array(
                         $post['parent'], time(), time(), $_SERVER['REMOTE_ADDR'],
@@ -1034,8 +1019,7 @@ function insertPost($post) {
                         $post['subject'], $post['message'], $post['password'],
                         $post['file'], $post['file_hex'], $post['file_original'],
                         $post['file_size'], $post['file_size_formatted'],
-                        $post['image_width'], $post['image_height'], $post['thumb'],
-                        $post['thumb_width'], $post['thumb_height']
+                        $post['image_width'], $post['image_height']
                 )
         );
         return $GLOBALS['db']->lastInsertId();
@@ -1423,9 +1407,7 @@ function handlePost() {
                         $file_type = strtolower(preg_replace('/.*(\..+)/', '\1', $_FILES['file']['name']));
                         if ($file_type == '.jpeg') { $file_type = '.jpg'; }
                         $file_name = time() . mt_rand(1, 99);
-                        $post['thumb'] = $file_name .$file_type;
                         $post['file'] = $file_name . $file_type;
-                        $thumb_location = "db/" . $post['file'];
                         $file_location = "db/" . $post['file'];
                         if (!($file_type == '.jpg' || $file_type == '.gif' || $file_type == '.png')) {
                                 fancyDie("Only GIF, JPG, and PNG files are allowed.");
@@ -1446,11 +1428,6 @@ function handlePost() {
                                 fancyDie("File transfer failure. Please go back and try again.");
                         }
                         $post['image_width'] = $file_info[0]; $post['image_height'] = $file_info[1];
-                        list($thumb_maxwidth, $thumb_maxheight) = thumbnailDimensions(
-                                $post['image_width'], $post['image_height'], $post['parent'] != '0'
-                        );
-                        $thumb_info = getimagesize($thumb_location);
-                        $post['thumb_width'] = TINYIB_THUMBWIDTH; $post['thumb_height'] = TINYIB_THUMBHEIGHT;
                 }
         }
 if (!CLAIRE_TEXTMODE) {
