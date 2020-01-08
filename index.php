@@ -1,6 +1,7 @@
 <?php
 // --Config Start-- 
 define('SV_ANONYMOUS', true); //true allow posting names.
+define('SV_BANNERS', false);
 define('SV_GOOGLE', false); //true enable Google reverse search button.
 define('SV_DOMAIN', 'http://localhost/claire'); // Domain and directory where your board is
 define('CLAIRE_TEXTMODE', false); //true disallow images.
@@ -11,7 +12,7 @@ define('TINYIB_MODPASS',    "modpassword"); // Leave blank to disable
 define('TINYIB_THREADSPERPAGE', 8);
 define('TINYIB_REPLIESTOSHOW',  3);
 define('TINYIB_MAXTHREADS',     0);    // 0 disables deleting old threads
-define('TINYIB_DELETE_TIMEOUT', 1200);  // Seconds for deleting own posts
+define('TINYIB_DELETE_TIMEOUT', 3540);  // Seconds for deleting own posts
 define('TINYIB_MAXPOSTSIZE',    16000); // Characters
 define('TINYIB_RATELIMIT',      7);   // Delay between posts from same IP
 define('TINYIB_TRIPSEED',   "1231");
@@ -100,6 +101,12 @@ function pageFooter() {
 </html>
 EOF;
 }
+function plural( $amount, $singular = '', $plural = 's' ) {
+    if ( $amount === '1' ) {
+        return $singular;
+    } elseif ( $amount === '01' ) {return $singular;}
+    return $plural;
+}
 function buildPost($post, $isrespage) {
 $post = preg_replace("#\*\*(.*?)\*\*#","<b>\\1</b>",$post);
     $post = preg_replace("#\[s\](.*?)\[/s\]#","<strike>\\1</strike>",$post);
@@ -144,16 +151,11 @@ EOF;
         }
 	if (LOGGED_IN) {
         $return .= <<<EOF
-<a href="?manage=&do=manage&p=moderate&moderate={$post['id']}" title="Delete" />X</a>
+<a href="?manage=&do=manage&p=moderate&moderate={$post['id']}" title="Delete" />X  </a>
 EOF;
 	} else {
 	$return .= <<<EOF
-<a href="?do=delpost&id={$post['id']}" title="Delete" />X</a>
-EOF;
-	}
-	if (SV_GOOGLE && $post["file"] != "") {
-        $return .= <<<EOF
-<a href="//www.google.com/searchbyimage?image_url=$svdomain/db/${post["file"]}" title="Google" />g</a> 
+<a href="?do=delpost&id={$post['id']}" title="Delete" />X  </a>
 EOF;
 	}
         if ($post["subject"] != "") {
@@ -163,6 +165,11 @@ EOF;
 ${post["nameblock"]} 
 
 EOF;
+	if (SV_GOOGLE && $post["file"] != "") {
+        $return .= <<<EOF
+<a href="//www.google.com/searchbyimage?image_url=$svdomain/db/${post["file"]}" title="Google Reverse Search" />[Google]</a>
+EOF;
+	}
         if (IS_ADMIN) {
                 $return .= ' [<a href="?do=manage&p=bans&bans='.urlencode($post['ip']).'" title="Ban poster">'.htmlspecialchars($post['ip']).'</a>]';
         }
@@ -179,15 +186,25 @@ EOF;
 </a>
 EOF;
         }
+		if (strlen($post['message']) > 1300 && $post['parent'] == 0 && !$isrespage ) {
+			$trunk = substr($post['message'],0,1310);
+			    $return .= <<<EOF
+						<blockquote>
+						{$trunk}...
+						</blockquote>
+		<span class="omittedposts">Post too long. Click <a href="?do=thread&id={$post["id"]}">here</a> to view the full text</span>
+EOF;
+		} else {
         $return .= <<<EOF
 <blockquote>
 {$post['message']}
 </blockquote>
 EOF;
+		}
         if ($post['parent'] == 0) {
                 if (!$isrespage && $post["omitted"] > 0) {
                         $return .=
-                                '<span class="omittedposts">'.$post['omitted'].' post(s) omitted. '.
+                                '<span class="omittedposts">'.$post['images'].' image'.plural( $post['images'] ).' and '.( $post['omitted'] ).' post'.plural( $post['omitted'] ).' omitted. '.
                                 '<a href="?do=thread&id='.$post["id"].'">Click here</a> to view.</span>'
                         ;
                 }
@@ -443,7 +460,11 @@ $body = '
         return $body;
         }
         }
-
+function RandImg() {
+$images = glob('banners/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+$randomImage = $images[array_rand($images)];
+return $randomImage;
+}
 function buildPage($htmlposts, $parent, $pages=0, $thispage=0) {
         $locked = $parent ? isLocked($parent) : false;
         $returnlink = ''; $pagelinks = '';
@@ -476,11 +497,14 @@ $body = '
 <body>
 
 <div class="logo"><a style="font-size:1em;" href="/">'.TINYIB_PAGETITLE.'</a></div>
-<br>
 
         ';
+		if (SV_BANNERS && !$parent) {
+				if (!file_exists('banners')){mkdir('banners', 0777, true);}
+				$body .= '<center><img src="'. RandImg() .'" ></center><br>';
+		}
         if ($locked) {
-                $body .= '<div class="replymode">This thread is locked. You can\'t reply any more.</div>';
+                $body .= '<div class="replymode">This thread is locked. You can\'t reply any more.</div><br>';
         }
         if ($parent) {
                 $body .= $returnlink . "\n" . $htmlposts;
@@ -492,7 +516,7 @@ $body = '
                 $body .= $returnlink . "\n" . $htmlposts;
         }
         $body .= <<<EOF
-<div class="adminbar">Powered by: <a href="https://github.com/ClaireIsAlive/Claire">Claire</a></div>
+<div class="adminbar"><a href="https://github.com/ClaireIsAlive/Claire">Claire</a> + <a href="https://github.com/ShivaMod/Claire">Cajita</a></div>
                <div class="pagelinks">
                         $pagelinks
                 </div>
@@ -513,6 +537,7 @@ function viewPage($pagenum) {
                         $htmlreplies[] = buildPost($reply, False);
                 }
                 $thread["omitted"] = (count($htmlreplies) == 3) ? (count(postsInThreadByID($thread['id'])) - 4) : 0;
+				$thread["images"] = count(imagesInThreadByID($thread['id'])) - 1;
                 $htmlposts[] = buildPost($thread, false) . implode("", array_reverse($htmlreplies)) . "<br clear=\"left\">\n<hr>";
         }
         return buildPage(implode('', $htmlposts), 0, $pagecount, $page);
@@ -527,6 +552,11 @@ function viewThread($id) {
 function adminBar() {
         if (! LOGGED_IN) { return '[<a href="?">Return</a>]'; }
         $text = IS_ADMIN ? '[<a href="?do=manage&p=bans">Bans</a>] ' : '';
+		if (SV_BANNERS) {
+			$text .=
+					'[<a href="?do=manage&p=banners">Banners</a>] '
+			;
+		}
         $text .=
                 '[<a href="?do=manage&p=threads">Thread list</a>] '.
                 '[<a href="?do=manage&p=moderate">Moderate Post</a>] '.
@@ -709,13 +739,14 @@ function fancyDie($message, $depth=1) {
         <link rel="stylesheet" type="text/css" href="/claire.css" title="claire"/>
         <link rel="alternate stylesheet" type="text/css" href="/futaba.css" title="futaba"/>
                 <script type="text/javascript" src="/switch.js"></script>
+		<style>body{color: #CCC;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEUcHBweHh5WWmVNAAAAJUlEQVR4AWMAAkYQgNOMaCJAAlUEiFFFgAhVBM1EICAoMljcAQBWEAChK8hEDAAAAABJRU5ErkJggg==);}a {color: #ccc;text-decoration:none;}</style>
 <body>
 
 <br>
         '.str_replace("\n", '<br>', $message).'
         
 
-<div class="adminbar">Powered by: <a href="https://github.com/ClaireIsAlive/Claire">Claire</a></div>
+<div class="adminbar" style="float:right"><a href="https://github.com/ClaireIsAlive/Claire">Claire</a> + <a href="https://github.com/ShivaMod/Claire">Cajita</a></div>
 </body>
         ');
 }
@@ -1071,6 +1102,13 @@ function postsInThreadByID($id) {
         );
         return $result;
 }
+function imagesInThreadByID($id) {
+        $result = fetchAndExecute(
+                'SELECT * FROM '.TINYIB_DBPOSTS.' WHERE id=? OR parent=? AND file',
+                array($id, $id)
+        );
+        return $result;
+}
 function latestRepliesInThreadByID($id) {
         $result = fetchAndExecute(
                 'SELECT * FROM '.TINYIB_DBPOSTS.' WHERE parent = ? ORDER BY id DESC LIMIT '.TINYIB_REPLIESTOSHOW,
@@ -1308,7 +1346,22 @@ function handleManage() {
                         session_destroy();
                         redirect('?do=manage&p=login');
                 } break;
-                case 'home': {
+                case 'banners': {
+				if (SV_BANNERS) {
+					$bannercount = count(glob("banners/*"));
+					$text .=
+							'<p>'.$bannercount.' banner'.plural($bannercount).' in this board</p>'
+					;	
+					foreach (glob("banners/*") as $filename) {
+							$text .=
+									'<a href="'.$filename.'" title=""><img src="'.$filename.'" width="200px" /></a>'
+							;					
+					}
+				} else {
+					fancyDie("<p style=\"text-align:center\">Sorry, banners are not avaliable in this board.</p>");
+				}
+                } break;
+				case 'home': {
                         $text .=
                                 'Currently '.countPosts().' posts in '.countThreads().
                                 ' threads, made by '.uniquePosts().' users.<br>'.
@@ -1338,16 +1391,16 @@ function handleDeletePost() {
         )) {
                 if (isset($_GET['force']) && $_GET['force'] == '1') {
                         deletePostByID($post['id']);
-                        fancyDie('Post successfully deleted.', 2);
+                        fancyDie('<p style="text-align: center;font-size: 21px;">Post successfully deleted.</p><h2 style="text-align:center">[<a href="?"> Return </a>]</h2>', 2);
                 } else {
                         fancyDie(
-                                'Are you sure you want to delete post #'.$post['id']."?\n".
-                                (($post['parent'])?'':"Deleting this post will delete the entire thread.\n").
-                                'Click <a href="?do=delpost&id='.$post['id'].'&force=1">here</a> to confirm.'
+                                '<p style="text-align: center;font-size: 21px;">Are you sure you want to delete post #'.$post['id']."?\n".
+                                (($post['parent'])?'':"</p><p>Deleting this post will delete the entire thread.\n").
+                                'Click <a href="?do=delpost&id='.$post['id'].'&force=1" style="text-decoration:underline;">here</a> to confirm.</p>'
                         );
                 }
         } else {
-                fancyDie('You have '.TINYIB_DELETE_TIMEOUT.' seconds to delete your own posts.');
+                fancyDie('<p style="text-align: center;font-size: 17px;">You have '.gmdate("i", TINYIB_DELETE_TIMEOUT).' minute'.plural(gmdate("i", TINYIB_DELETE_TIMEOUT)).' to delete your own posts.</p><h2 style="text-align:center">[<a href="?"> Return </a>]</h2>');
         }
         $redirect = false;
 }
